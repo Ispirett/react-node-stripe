@@ -11,11 +11,10 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
-    "express-winston": "^4.2.0",
     "mongodb": "^4.4.1",
     "mongoose": "^6.2.5",
-    "stripe": "^8.207.0",
-    "winston": "^3.6.0"
+    "morgan": "^1.10.0",
+    "stripe": "^8.207.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"
