@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import {StripeComponent, RemovePaymentButton} from './'
+import {StripeComponent, HavePaymentComponent} from './'
 
 export default () => {
     const [hasCard, setHasCard] = useState(false);
@@ -12,7 +12,7 @@ export default () => {
     return (
         <>
          { hasCard && (
-             <RemovePaymentButton/>
+             <HavePaymentComponent/>
          )
          }
          {!hasCard && (
