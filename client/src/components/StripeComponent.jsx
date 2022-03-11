@@ -1,29 +1,37 @@
 // reference https://stripe.com/docs/stripe-js/react
 import React,{useEffect} from 'react';
-import {Elements, PaymentElement, useStripe,  useElements, ElementsConsumer, CardElement} from '@stripe/react-stripe-js';
+import {Elements, useStripe,  useElements, CardElement} from '@stripe/react-stripe-js';
 import {loadStripe} from '@stripe/stripe-js';
 import axios from 'axios';
+import {handleUpdateUser, host} from '../config/defaults.js'
   //! standard import for env
   //yarn add react-scripts
   //? const stripeKey = process.env.REACT_STRIPE_PUB_KEY
   //* using vite to import env variables
+
+
   const stripeKey = import.meta.env.VITE_STRIPE_PUB_KEY
   const stripePromise = loadStripe(stripeKey);
-  const host = import.meta.env.VITE_HOST || "http://localhost:4100"
 
 // add a new payment method to stripe
   const handleSubmit = async (stripe, elements) => {
-  
+    const user = await JSON.parse(window.localStorage.getItem('user'));
+    
     const {error, paymentMethod} = await stripe.createPaymentMethod({
         type: 'card',
         card: elements.getElement(CardElement),
     });
 
+    //* call api
     if (!error) {
-         await  axios.get(`${host}/add_payment`,
-         {params: {paymentMethodId: paymentMethod.id}})
-         .then(res => {console.log(res)})
-         console.log('no error', paymentMethod);
+       const response = await  axios.get(`${host}/add_payment`,
+         {params: {paymentMethodId: paymentMethod.id,
+           userId: user._id, 
+           customerId:user.stripe_customer_id}
+          });
+         console.log(response);
+         console.log('no error', paymentMethod);  
+         handleUpdateUser(response);
     }
     else {
         console.log('error', error);

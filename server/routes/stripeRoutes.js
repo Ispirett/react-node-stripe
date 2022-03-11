@@ -1,4 +1,5 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const User = require('../models/User');
 
 const stripeRoutes = (app) => {
     const customer_id =  "cus_LI5nPJSYtOfg7Q";
@@ -46,30 +47,48 @@ const stripeRoutes = (app) => {
         }
         
     })
+ 
 
-
-    
+    // !important
+    // ADD PAYMENT 
     app.get('/add_payment', async (req, res) => {
-      console.log(req.query.paymentMethodId);
         try{
+            let user;
             const paymentMethod = await stripe.paymentMethods.attach(
                 req.query.paymentMethodId,
-                {customer: customer_id}  //* customer id should be stored on the user object in the database  
+                {customer: req.query.customerId}  //* customer id should be stored on the user object in the database  
             )
-            res.status(200).json({status: "success", paymentMethod:paymentMethod});
+
+            // update user hasCard to true
+            User.findByIdAndUpdate(req.query.userId,{has_card: true})
+            .then(result => {
+                //  the return user is stale so we update it manulally before sending it to the frontend
+                 result.has_card = true;
+                 user = result;
+                 console.log("update user", user)
+                 res.status(200).json({status: "success", user: user});
+                })
+                
+            .catch(error => {console.log("update user error", error)})
+
+
+            
         }
+
         catch(err){
             res.status(500).json({status: "error", message: err.message});
         }
        
     })
-  
+  // !important
+  // REMOVE PAYMENT
     app.get('/remove_payment', async (req, res) => {
         
         try{
+            let user;
             // get all customer payments
             const paymentMethods = await stripe.paymentMethods.list({
-                customer: customer_id,
+                customer: req.query.customerId,
                 type: 'card'
             })
 
@@ -80,8 +99,15 @@ const stripeRoutes = (app) => {
             const paymentMethod = await stripe.paymentMethods.detach(
                 firstPaymentMethodId,
             )
-
-            res.status(200).json({status: "success", paymentMethod: paymentMethod});
+            // update user 
+            User.findByIdAndUpdate(req.query.userId,{has_card: false})
+            .then(result => {
+                //  the return user is stale so we update it manulally before sending it to the frontend
+                 result.has_card = false;
+                 user = result;
+                 console.log("update user", user)
+                 res.status(200).json({status: "success", user: user});
+                })
         }
         catch(err){
             res.status(500).json({status: "error", message: err.message});
@@ -103,6 +129,33 @@ const stripeRoutes = (app) => {
     })
     // CHARGE CUSTOMER
     // https://stripe.com/docs/saving-cards
+    app.post('/charge',async (req, res) => {
+        try{
+
+            const paymentMethods = await stripe.paymentMethods.list({
+                customer: req.body.customerId,
+                type: 'card'
+            })
+
+            // get first paymentMethod
+            const firstPaymentMethodId = paymentMethods.data[0].id;
+
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: req.body.amount,
+                currency: 'usd',
+                payment_method_types: ['card'],
+                confirm: true,
+                customer: req.body.customerId,
+                payment_method: firstPaymentMethodId,
+              });
+
+            res.status(200).json({status: "success", paymentIntent: paymentIntent});
+        }
+        catch(err){
+            res.status(500).json({status: "error", message: err.message});
+        }
+    })
 }
 
 module.exports = stripeRoutes;
