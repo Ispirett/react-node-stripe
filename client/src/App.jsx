@@ -11,11 +11,15 @@ function App() {
    const user = await window.localStorage.getItem('user');
 
     if (user === null) {
+    //  We create a new user in mongodb 
+    // api can be found in server/routes/authRoutes.js 
+  
      const response = await axios.get(`${host}/auth/sign_up`)
      console.log(response.data.result);
      window.localStorage.setItem('user', JSON.stringify(response.data.result));
     }
     else {
+      // get user object form localStorage
       const parsedUser = JSON.parse(user);
       console.log(parsedUser._id);
     }

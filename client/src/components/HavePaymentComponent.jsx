@@ -8,6 +8,8 @@ import { useState, useEffect } from "react";
 
 const removePayment =  async () => {
   const user = await JSON.parse(window.localStorage.getItem('user'));
+  //*  call api 
+  //We remove the payment method from the customer 
   const reponse = await axios.get(`${host}/remove_payment`, {params:{userId: user._id, customerId: user.stripe_customer_id}});
   handleUpdateUser(reponse, "removed payment method");
   console.log("remove card",reponse);
@@ -23,6 +25,8 @@ export default () => {
          const user = await JSON.parse(window.localStorage.getItem('user'));
 
         //*  call api 
+        // We can now charge the customer saved payment method 
+        // server/routes/stripeRoutes.js
         await axios.post(`${host}/charge`, {
                 amount: amount,
                 customerId: user.stripe_customer_id,

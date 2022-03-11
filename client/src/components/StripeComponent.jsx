@@ -1,4 +1,4 @@
-// reference https://stripe.com/docs/stripe-js/react
+
 import React,{useEffect} from 'react';
 import {Elements, useStripe,  useElements, CardElement} from '@stripe/react-stripe-js';
 import {loadStripe} from '@stripe/stripe-js';
@@ -16,13 +16,16 @@ import {handleUpdateUser, host} from '../config/defaults.js'
 // add a new payment method to stripe
   const handleSubmit = async (stripe, elements) => {
     const user = await JSON.parse(window.localStorage.getItem('user'));
-    
+
+    // reference https://stripe.com/docs/stripe-js/react
     const {error, paymentMethod} = await stripe.createPaymentMethod({
         type: 'card',
         card: elements.getElement(CardElement),
     });
 
     //* call api
+    // After the paymentMethod is created we create and attach the customer to the paymentMethod
+    // server/routes/stripeRoutes.js 
     if (!error) {
        const response = await  axios.get(`${host}/add_payment`,
          {params: {paymentMethodId: paymentMethod.id,
